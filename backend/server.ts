@@ -168,7 +168,7 @@ async function startServer() {
       'http://localhost:5173',           // Vite dev
       'http://localhost:3000',           // Backend dev
       'https://trungq1405.github.io',    // ← THÊM GitHub Pages
-      'https://trungq1405.github.io/pdf-to-docx-converter' // ← Repo path
+      'https://trungq1405-pdf-to-docx-converter-ba-chi.vercel.app/' // ← Repo path
     ],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
