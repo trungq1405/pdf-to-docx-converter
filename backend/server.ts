@@ -165,11 +165,10 @@ async function startServer() {
   const PORT = 3000;
   app.use(cors({
     origin: [
-      'http://localhost:5173',      // Vite dev
-      'http://localhost:3000',      // Backend dev
-      'https://trungq1405.github.io', // GitHub Pages frontend
-      'https://pdf-to-docx-converter.vercel.app', // Vercel fullstack (nếu dùng)
-      '*'                           // Allow all (dev thoải mái, prod có thể giới hạn)
+      'http://localhost:5173',           // Vite dev
+      'http://localhost:3000',           // Backend dev
+      'https://trungq1405.github.io',    // ← THÊM GitHub Pages
+      'https://trungq1405.github.io/pdf-to-docx-converter' // ← Repo path
     ],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
