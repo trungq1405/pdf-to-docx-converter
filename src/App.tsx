@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { FileUp, FileText, Download, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { API_URL } from './config';
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -52,7 +53,7 @@ export default function App() {
 
     try {
       // const response = await fetch('/api/convert', {
-      const response = await fetch('http://localhost:3000/api/convert', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         body: formData,
       });

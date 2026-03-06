@@ -164,9 +164,25 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
   app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000'],  // ← Frontend origins
+    origin: [
+      'http://localhost:5173',      // Vite dev
+      'http://localhost:3000',      // Backend dev
+      'https://trungq1405.github.io', // GitHub Pages frontend
+      'https://pdf-to-docx-converter.vercel.app', // Vercel fullstack (nếu dùng)
+      '*'                           // Allow all (dev thoải mái, prod có thể giới hạn)
+    ],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
     credentials: true
   }));
+
+
+  // Serve frontend static files
+  app.use(express.static(path.join(__dirname, '../dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+
   const upload = multer({ storage: multer.memoryStorage() });
 
   // API routes
