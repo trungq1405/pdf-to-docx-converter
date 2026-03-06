@@ -51,7 +51,8 @@ export default function App() {
     formData.append('pdf', file);
 
     try {
-      const response = await fetch('/api/convert', {
+      // const response = await fetch('/api/convert', {
+      const response = await fetch('http://localhost:3000/api/convert', {
         method: 'POST',
         body: formData,
       });

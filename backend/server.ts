@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { createServer as createViteServer } from "vite";
 import multer from "multer";
 import { PDFParse } from "pdf-parse";
@@ -11,7 +12,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Setup pdfjs worker
-pdfjs.GlobalWorkerOptions.workerSrc = path.join(__dirname, "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs");
+// pdfjs.GlobalWorkerOptions.workerSrc = path.join(__dirname, "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs");
+import * as pdfjsLib from 'pdfjs-dist';
+pdfjsLib.GlobalWorkerOptions.workerSrc = ''; // Disable worker cho Node.js
 
 // Helper function to extract formatted text and generate DOCX paragraphs
 async function extractFormattedParagraphs(buffer: Buffer): Promise<Paragraph[]> {
@@ -25,7 +28,7 @@ async function extractFormattedParagraphs(buffer: Buffer): Promise<Paragraph[]> 
     const page = await doc.getPage(pageNum);
     const viewport = page.getViewport({ scale: 1 });
     const pageWidth = viewport.width;
-    
+
     const textContent = await page.getTextContent();
     const items = textContent.items as any[];
     const styles = textContent.styles;
@@ -38,9 +41,9 @@ async function extractFormattedParagraphs(buffer: Buffer): Promise<Paragraph[]> 
       if (!item.str || item.str.trim() === '') {
         if (!item.str) continue;
       }
-      
+
       const y = Math.round(item.transform?.[5] || 0); // Y coordinate
-      
+
       // Find an existing line within a tolerance (e.g., 4 points)
       let foundY = y;
       for (const key of linesMap.keys()) {
@@ -69,18 +72,18 @@ async function extractFormattedParagraphs(buffer: Buffer): Promise<Paragraph[]> 
       const lastItem = lineItems[lineItems.length - 1];
       const maxX = (Number(lastItem.transform?.[4]) || 0) + (Number(lastItem.width) || 0);
       const lineWidth = Math.max(0, maxX - minX);
-      
+
       // Determine alignment
       let alignment: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT;
       let indentLeft = 0;
-      
+
       const centerPoint = minX + (lineWidth / 2);
       const pageCenter = pageWidth / 2;
-      
+
       // If the text is roughly centered
       if (Math.abs(centerPoint - pageCenter) < 50 && minX > 40 && maxX < pageWidth - 40) {
         alignment = AlignmentType.CENTER;
-      } 
+      }
       // If the text is right-aligned
       else if (pageWidth - maxX < 100 && minX > pageWidth / 2) {
         alignment = AlignmentType.RIGHT;
@@ -123,7 +126,7 @@ async function extractFormattedParagraphs(buffer: Buffer): Promise<Paragraph[]> 
             font: "Times New Roman", // Force standard font to prevent XML corruption from weird PDF font names
           }));
         }
-        
+
         lastItemX = item.transform?.[4] || 0;
         lastItemWidth = item.width || 0;
         lastItemStr = item.str;
@@ -160,10 +163,14 @@ async function extractFormattedParagraphs(buffer: Buffer): Promise<Paragraph[]> 
 async function startServer() {
   const app = express();
   const PORT = 3000;
-
+  app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:3000'],  // ← Frontend origins
+    credentials: true
+  }));
   const upload = multer({ storage: multer.memoryStorage() });
 
   // API routes
+  // @ts-ignore
   app.post("/api/convert", upload.single("pdf"), async (req, res) => {
     try {
       if (!req.file) {
@@ -189,16 +196,16 @@ async function startServer() {
 
       // 3. Generate buffer and send
       const buffer = await Packer.toBuffer(doc);
-      
+
       const originalName = req.file.originalname.replace(/\.pdf$/i, "").replace(/["\\]/g, "");
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-      
+
       // Safe filename header - simple ASCII to avoid any browser parsing issues
       res.setHeader("Content-Disposition", `attachment; filename="converted_document.docx"`);
       res.send(buffer);
     } catch (error: any) {
       console.error("Conversion error:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: error.message || "Failed to convert PDF to DOCX",
         details: process.env.NODE_ENV !== 'production' ? error.stack : undefined
       });
