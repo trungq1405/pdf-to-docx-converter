@@ -53,7 +53,7 @@ export default function App() {
 
         try {
             // const response = await fetch('/api/convert', {
-            const response = await fetch('/api/convert', {
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 body: formData,
             });
